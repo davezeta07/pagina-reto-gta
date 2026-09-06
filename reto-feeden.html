@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feeden — El reto de los $2000</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;500;600;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #120a1f;
+    --bg-panel: #180e2c;
+    --pink: #ff3f9e;
+    --teal: #29e0c4;
+    --orange: #ff8a3d;
+    --text: #f4eefc;
+    --text-muted: #9c8db8;
+    --border: rgba(255,255,255,0.09);
+    --radius: 10px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,63,158,0.16), transparent 60%),
+      radial-gradient(ellipse 900px 600px at 100% 10%, rgba(41,224,196,0.10), transparent 55%);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, .display{
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+
+  a{ color: inherit; }
+
+  :focus-visible{
+    outline: 2px solid var(--teal);
+    outline-offset: 3px;
+  }
+
+  .wrap{
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---- Header / Nav ---- */
+  header{
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(18,10,31,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+
+  .header-inner{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 18px 0;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .wordmark{
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+
+  .wordmark .avatar{
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+
+  nav{ display:flex; gap: 4px; }
+
+  nav button{
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color .15s ease, background .15s ease;
+  }
+
+  nav button:hover{ color: var(--text); }
+
+  nav button[aria-selected="true"]{
+    color: var(--bg);
+    background: linear-gradient(90deg, var(--teal), var(--pink));
+  }
+
+  main{ padding: 48px 0 80px; }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: fade .35s ease; }
+
+  @keyframes fade{
+    from{ opacity:0; transform: translateY(4px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  /* ---- Principal ---- */
+  .eyebrow{
+    color: var(--teal);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  h1.title{
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.15;
+    margin-bottom: 18px;
+  }
+
+  .lead{
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 60ch;
+    margin-bottom: 32px;
+  }
+
+  .platform-toggle{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .platform-toggle button{
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+
+  .platform-toggle button:hover{ color: var(--text); }
+
+  .platform-toggle button.on{
+    border-color: transparent;
+    color: var(--bg);
+  }
+
+  .platform-toggle button.on.kick{ background: #53FC18; }
+  .platform-toggle button.on.twitch{ background: #A970FF; }
+
+  .player{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .player iframe{
+    width:100%; height:100%; border:none;
+  }
+
+  /* ---- Resúmenes ---- */
+  .video-embed{
+    width:100%;
+    aspect-ratio: 16/9;
+    border-radius: var(--radius);
+    overflow:hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .video-embed iframe{ width:100%; height:100%; border:none; }
+
+  .video-caption{
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 44px;
+  }
+
+  h2.section-title{
+    font-size: 1.3rem;
+    margin-bottom: 18px;
+  }
+
+  .day-list{
+    list-style:none;
+    margin:0; padding:0;
+    border-top: 1px solid var(--border);
+  }
+
+  .day-row{
+    border-bottom: 1px solid var(--border);
+  }
+
+  .day-row-head{
+    display:flex;
+    align-items:center;
+    gap: 16px;
+    padding: 14px 4px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .day-thumb{
+    width: 96px;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: var(--bg-panel);
+  }
+
+  .day-meta{ flex: 1; min-width:0; }
+
+  .day-title{
+    font-weight: 700;
+    font-size: 0.98rem;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+
+  .day-date{
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+
+  .day-caret{
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: transform .2s ease;
+    flex-shrink:0;
+  }
+
+  .day-row.open .day-caret{ transform: rotate(90deg); color: var(--teal); }
+
+  .day-player{
+    display:none;
+    padding: 0 4px 20px;
+  }
+
+  .day-row.open .day-player{ display:block; }
+
+  .day-player .video-embed{ margin-bottom:0; }
+
+  /* ---- Recaudado ---- */
+  .raise-block{ text-align:center; margin-bottom: 40px; }
+
+  .raise-numbers{
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: clamp(2.4rem, 8vw, 3.6rem);
+    font-weight: 700;
+    line-height:1;
+  }
+
+  .raise-numbers .goal{ color: var(--text-muted); font-weight: 500; }
+
+  .raise-sub{
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-size: 0.95rem;
+  }
+
+  .bar-track{
+    width: 100%;
+    height: 18px;
+    background: var(--bg-panel);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-top: 28px;
+  }
+
+  .bar-fill{
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--teal), var(--pink), var(--orange));
+    transition: width 1.1s cubic-bezier(.2,.8,.2,1);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bar-fill{ transition: none; }
+    .panel.active{ animation: none; }
+  }
+
+  .donate-heading{
+    text-align:center;
+    margin-bottom: 20px;
+    color: var(--text-muted);
+    font-size: 0.98rem;
+  }
+
+  .donate-row{
+    display:flex;
+    gap: 14px;
+    justify-content:center;
+    flex-wrap: wrap;
+  }
+
+  .donate-btn{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+
+  .donate-btn:hover{ transform: translateY(-2px); border-color: var(--teal); }
+
+  .donate-btn .swatch{
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  .paypal .swatch{ background: #00A8E8; }
+  .mp .swatch{ background: var(--orange); }
+
+  .copy-toast{
+    text-align:center;
+    color: var(--teal);
+    font-size: 0.88rem;
+    margin-top: 14px;
+    height: 1.2em;
+  }
+
+  .social-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .social-btn{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    text-decoration:none;
+    color: var(--text);
+    transition: transform .15s ease, border-color .15s ease;
+  }
+
+  .social-btn:hover{ transform: translateY(-2px); border-color: var(--teal); }
+
+  .social-btn .swatch{
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    flex-shrink:0;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+
+  .social-btn .label{
+    display:flex;
+    flex-direction: column;
+    min-width:0;
+  }
+
+  .social-btn .platform-name{ font-weight:700; font-size:0.95rem; }
+  .social-btn .handle{ font-size:0.82rem; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  footer{
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  @media (max-width: 560px){
+    .header-inner{ justify-content: center; text-align:center; }
+    nav{ width:100%; justify-content:center; }
+    .day-thumb{ width: 72px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="wordmark"><img class="avatar" src="images/feeden-ig-tiktok.jpg" alt="">Feeden</div>
+    <nav role="tablist" aria-label="Secciones">
+      <button role="tab" aria-selected="true" data-tab="principal">Principal</button>
+      <button role="tab" aria-selected="false" data-tab="resumenes">Resúmenes</button>
+      <button role="tab" aria-selected="false" data-tab="recaudado">Recaudado</button>
+      <button role="tab" aria-selected="false" data-tab="redes">Redes</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- PRINCIPAL -->
+  <section class="panel active" id="tab-principal" role="tabpanel">
+    <p class="eyebrow">El reto</p>
+    <h1 class="title">$2000 antes de que salga GTA 6</h1>
+    <p class="lead" id="challenge-description">
+      Feeden se propuso juntar $2000 dólares antes del lanzamiento de GTA 6 para comprarse una PS5 y el juego el día uno.
+      Acá vas a poder seguir el reto en vivo, ver cómo va el recaudo y no perderte ningún resumen.
+    </p>
+
+    <div class="platform-toggle" role="group" aria-label="Elegir plataforma de transmisión">
+      <button class="on kick" data-platform="kick">Kick</button>
+      <button class="twitch" data-platform="twitch">Twitch</button>
+    </div>
+
+    <div class="player" id="player-container"></div>
+  </section>
+
+  <!-- RESUMENES -->
+  <section class="panel" id="tab-resumenes" role="tabpanel">
+    <p class="eyebrow">Así arrancó todo</p>
+    <h2 class="section-title" style="font-size:1.6rem; margin-bottom:16px;">El reto, explicado por Feeden</h2>
+    <div class="video-embed" id="main-video-embed"></div>
+    <p class="video-caption" id="main-video-caption">Acá Feeden cuenta en qué consiste el reto y cómo lo va a ir cumpliendo.</p>
+
+    <h2 class="section-title">Resumen de los días</h2>
+    <ul class="day-list" id="day-list"></ul>
+  </section>
+
+  <!-- RECAUDADO -->
+  <section class="panel" id="tab-recaudado" role="tabpanel">
+    <div class="raise-block">
+      <p class="eyebrow" style="text-align:center;">Lo recaudado hasta ahora</p>
+      <div class="raise-numbers">
+        <span id="raised-amount">$0</span> <span class="goal" id="goal-amount">/ $2000</span>
+      </div>
+      <p class="raise-sub" id="raise-percent">0% del objetivo</p>
+      <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+    </div>
+
+    <p class="donate-heading">¿Querés sumar para que Feeden llegue a la meta?</p>
+    <div class="donate-row">
+      <a class="donate-btn paypal" id="paypal-btn" target="_blank" rel="noopener">
+        <span class="swatch"></span> Donar con PayPal
+      </a>
+      <button class="donate-btn mp" id="mp-btn" type="button">
+        <span class="swatch"></span> Donar con MercadoPago
+      </button>
+    </div>
+    <p class="copy-toast" id="copy-toast"></p>
+  </section>
+
+  <!-- REDES -->
+  <section class="panel" id="tab-redes" role="tabpanel">
+    <p class="eyebrow">Seguilo en todos lados</p>
+    <h2 class="section-title" style="font-size:1.6rem; margin-bottom:28px;">Redes de Feeden</h2>
+    <div class="social-grid" id="social-grid"></div>
+  </section>
+
+</main>
+
+<footer>Página no oficial de seguimiento del reto de Feeden.</footer>
+
+<script>
+/* =====================================================================
+   CONFIG — Datos fijos de la página.
+   El monto recaudado, el video principal y los resúmenes diarios ya NO
+   se editan acá: se cargan automáticamente desde el Google Sheet
+   (sheetId más abajo). Editá el Sheet para actualizarlos, no este archivo.
+   ===================================================================== */
+const CONFIG = {
+  kickChannel: "feeden",
+  twitchChannel: "feeden_",
+
+  // Valores de respaldo por si el Google Sheet no llega a cargar (ej. sin conexión).
+  // Normalmente no hace falta tocar esto.
+  mainVideoId: "",
+  dailySummaries: [],
+
+  // Recaudación
+  goal: 2000,
+  raised: 0, // <-- se sobrescribe automáticamente con el dato del Google Sheet (queda como respaldo si el Sheet no carga)
+
+  // Google Sheet que alimenta el monto recaudado, el video principal y los resúmenes diarios.
+  // Pestañas: "datos" (columnas raised, mainVideoId) y "videos" (columnas id, title, date)
+  sheetId: "1PjmKdRfTRtuXz_8SR2IXVeHoDjPk2RXNHb-H6987LcQ",
+
+  paypalUrl: "https://streamlabs.com/feeden_1/tip",
+  mercadoPagoAlias: "Feeden",
+
+  // Redes sociales — agregá o sacá filas según haga falta
+  socialLinks: [
+    { platform: "YouTube",  handle: "@Feeden_",  url: "https://www.youtube.com/@Feeden_",     image: "images/feeden-youtube.jpg" },
+    { platform: "Twitch",   handle: "feeden_",    url: "https://www.twitch.tv/feeden_",         image: "images/feeden-twitch-kick.png" },
+    { platform: "Kick",     handle: "feeden",     url: "https://kick.com/feeden",               image: "images/feeden-twitch-kick.png" },
+    { platform: "Instagram",handle: "@fedenrios", url: "https://www.instagram.com/fedenrios/",  image: "images/feeden-ig-tiktok.jpg" },
+    { platform: "TikTok",   handle: "@feeden_",   url: "https://www.tiktok.com/@feeden_",       image: "images/feeden-ig-tiktok.jpg" }
+  ]
+};
+/* ===================================================================== */
+
+// ---- Tabs ----
+const tabs = document.querySelectorAll('nav [role="tab"]');
+const panels = {
+  principal: document.getElementById('tab-principal'),
+  resumenes: document.getElementById('tab-resumenes'),
+  recaudado: document.getElementById('tab-recaudado'),
+  redes: document.getElementById('tab-redes')
+};
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+    tab.setAttribute('aria-selected', 'true');
+    Object.values(panels).forEach(p => p.classList.remove('active'));
+    panels[tab.dataset.tab].classList.add('active');
+  });
+});
+
+// ---- Reproductor multiplataforma ----
+const playerContainer = document.getElementById('player-container');
+const platformButtons = document.querySelectorAll('.platform-toggle button');
+const parentDomain = location.hostname || 'localhost';
+
+function renderPlayer(platform){
+  platformButtons.forEach(b => b.classList.toggle('on', b.dataset.platform === platform));
+  if(platform === 'kick'){
+    playerContainer.innerHTML = `<iframe src="https://player.kick.com/${CONFIG.kickChannel}" allowfullscreen></iframe>`;
+  } else {
+    playerContainer.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${CONFIG.twitchChannel}&parent=${parentDomain}" allowfullscreen></iframe>`;
+  }
+}
+
+platformButtons.forEach(btn => {
+  btn.addEventListener('click', () => renderPlayer(btn.dataset.platform));
+});
+
+renderPlayer('kick');
+
+// ---- Video principal ----
+const mainEmbed = document.getElementById('main-video-embed');
+function renderMainVideo(){
+  if(CONFIG.mainVideoId){
+    mainEmbed.innerHTML = `<iframe src="https://www.youtube.com/embed/${CONFIG.mainVideoId}" allowfullscreen></iframe>`;
+  } else {
+    mainEmbed.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:0.9rem;">Agregá el ID del video en el Sheet (mainVideoId)</div>`;
+  }
+}
+renderMainVideo();
+
+// ---- Lista de resúmenes diarios ----
+const dayList = document.getElementById('day-list');
+function renderDayList(){
+  dayList.innerHTML = '';
+  CONFIG.dailySummaries.forEach((day) => {
+    const li = document.createElement('li');
+    li.className = 'day-row';
+
+    const thumbSrc = day.id
+      ? `https://img.youtube.com/vi/${day.id}/hqdefault.jpg`
+      : '';
+
+    li.innerHTML = `
+      <button class="day-row-head" aria-expanded="false">
+        ${thumbSrc ? `<img class="day-thumb" src="${thumbSrc}" alt="">` : `<div class="day-thumb"></div>`}
+        <div class="day-meta">
+          <div class="day-title">${day.title || 'Sin título todavía'}</div>
+          <div class="day-date">${day.date || ''}</div>
+        </div>
+        <span class="day-caret">›</span>
+      </button>
+      <div class="day-player"></div>
+    `;
+
+    const head = li.querySelector('.day-row-head');
+    const playerBox = li.querySelector('.day-player');
+
+    head.addEventListener('click', () => {
+      const isOpen = li.classList.toggle('open');
+      head.setAttribute('aria-expanded', String(isOpen));
+      if(isOpen && day.id && !playerBox.innerHTML){
+        playerBox.innerHTML = `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${day.id}" allowfullscreen></iframe></div>`;
+      }
+    });
+
+    dayList.appendChild(li);
+  });
+}
+renderDayList();
+
+// ---- Recaudado ----
+function renderRaised(){
+  const pct = Math.min(100, Math.round((CONFIG.raised / CONFIG.goal) * 100));
+  document.getElementById('raised-amount').textContent = `$${Number(CONFIG.raised).toLocaleString('es-AR')}`;
+  document.getElementById('goal-amount').textContent = `/ $${CONFIG.goal.toLocaleString('es-AR')}`;
+  document.getElementById('raise-percent').textContent = `${pct}% del objetivo`;
+
+  requestAnimationFrame(() => {
+    document.getElementById('bar-fill').style.width = pct + '%';
+  });
+}
+renderRaised();
+
+// ---- Conexión con Google Sheet (monto, video principal y resúmenes) ----
+async function loadSheetData(){
+  if(!CONFIG.sheetId) return;
+  try{
+    const [datosRes, videosRes] = await Promise.all([
+      fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/datos`),
+      fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/videos`)
+    ]);
+    const datos = await datosRes.json();
+    const videos = await videosRes.json();
+
+    if(datos && datos[0]){
+      if(datos[0].raised !== undefined && datos[0].raised !== '') CONFIG.raised = Number(datos[0].raised) || 0;
+      if(datos[0].mainVideoId) CONFIG.mainVideoId = datos[0].mainVideoId.trim();
+    }
+
+    if(Array.isArray(videos) && videos.length){
+      CONFIG.dailySummaries = videos
+        .filter(v => v.id || v.title)
+        .map(v => ({ id: (v.id || '').trim(), title: v.title || 'Sin título todavía', date: v.date || '' }));
+    }
+
+    renderMainVideo();
+    renderDayList();
+    renderRaised();
+  }catch(e){
+    // Si no hay conexión (ej. abriendo el archivo local) se queda con los valores de respaldo del CONFIG.
+    console.warn('No se pudo cargar el Google Sheet, usando valores de respaldo.', e);
+  }
+}
+loadSheetData();
+
+// ---- Redes sociales ----
+const socialGrid = document.getElementById('social-grid');
+
+CONFIG.socialLinks.forEach(social => {
+  const a = document.createElement('a');
+  a.className = 'social-btn';
+  a.href = social.url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.innerHTML = `
+    <img class="swatch" src="${social.image}" alt="">
+    <span class="label">
+      <span class="platform-name">${social.platform}</span>
+      <span class="handle">${social.handle}</span>
+    </span>
+  `;
+  socialGrid.appendChild(a);
+});
+
+// ---- Donaciones ----
+document.getElementById('paypal-btn').href = CONFIG.paypalUrl;
+
+document.getElementById('mp-btn').addEventListener('click', async () => {
+  try{
+    await navigator.clipboard.writeText(CONFIG.mercadoPagoAlias);
+    document.getElementById('copy-toast').textContent = `Alias copiado: ${CONFIG.mercadoPagoAlias} — pegalo en MercadoPago`;
+  }catch(e){
+    document.getElementById('copy-toast').textContent = `Alias de MercadoPago: ${CONFIG.mercadoPagoAlias}`;
+  }
+});
+</script>
+
+</body>
+</html>
