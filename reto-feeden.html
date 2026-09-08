@@ -205,6 +205,45 @@
     margin-bottom: 44px;
   }
 
+  .summary-group{
+    border-top: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .summary-group-header{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    padding: 18px 4px;
+    cursor: pointer;
+  }
+
+  .group-caret{
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    transition: transform .2s ease;
+  }
+
+  .summary-group-header[aria-expanded="true"] .group-caret{
+    transform: rotate(90deg);
+    color: var(--teal);
+  }
+
+  .summary-group-body{
+    overflow: hidden;
+  }
+
+  .summary-group-body.collapsed{
+    display: none;
+  }
+
   h2.section-title{
     font-size: 1.3rem;
     margin-bottom: 18px;
@@ -464,8 +503,25 @@
     <div class="video-embed" id="main-video-embed"></div>
     <p class="video-caption" id="main-video-caption">Acá Feeden cuenta en qué consiste el reto y cómo lo va a ir cumpliendo.</p>
 
-    <h2 class="section-title">Resumen de los días</h2>
-    <ul class="day-list" id="day-list"></ul>
+    <div class="summary-group">
+      <button class="summary-group-header" aria-expanded="true" data-target="daily-section">
+        <span>Resúmenes diarios</span>
+        <span class="group-caret">›</span>
+      </button>
+      <div class="summary-group-body" id="daily-section">
+        <ul class="day-list" id="day-list-daily"></ul>
+      </div>
+    </div>
+
+    <div class="summary-group">
+      <button class="summary-group-header" aria-expanded="false" data-target="weekly-section">
+        <span>Resúmenes semanales</span>
+        <span class="group-caret">›</span>
+      </button>
+      <div class="summary-group-body collapsed" id="weekly-section">
+        <ul class="day-list" id="day-list-weekly"></ul>
+      </div>
+    </div>
   </section>
 
   <!-- RECAUDADO -->
@@ -517,13 +573,14 @@ const CONFIG = {
   // Normalmente no hace falta tocar esto.
   mainVideoId: "",
   dailySummaries: [],
+  weeklySummaries: [],
 
   // Recaudación
   goal: 2000,
   raised: 0, // <-- se sobrescribe automáticamente con el dato del Google Sheet (queda como respaldo si el Sheet no carga)
 
-  // Google Sheet que alimenta el monto recaudado, el video principal y los resúmenes diarios.
-  // Pestañas: "datos" (columnas raised, mainVideoId) y "videos" (columnas id, title, date)
+  // Google Sheet que alimenta el monto recaudado, el video principal y los resúmenes diarios/semanales.
+  // Pestañas: "datos" (columnas raised, mainVideoId), "diarios" (resúmenes diarios) y "semanales" (resúmenes semanales) — ambas con columnas id, title, date
   sheetId: "1PjmKdRfTRtuXz_8SR2IXVeHoDjPk2RXNHb-H6987LcQ",
 
   paypalUrl: "https://streamlabs.com/feeden_1/tip",
@@ -589,11 +646,10 @@ function renderMainVideo(){
 }
 renderMainVideo();
 
-// ---- Lista de resúmenes diarios ----
-const dayList = document.getElementById('day-list');
-function renderDayList(){
-  dayList.innerHTML = '';
-  CONFIG.dailySummaries.forEach((day) => {
+// ---- Listas de resúmenes (diarios y semanales) ----
+function renderVideoList(container, videoArray){
+  container.innerHTML = '';
+  videoArray.forEach((day) => {
     const li = document.createElement('li');
     li.className = 'day-row';
 
@@ -624,10 +680,27 @@ function renderDayList(){
       }
     });
 
-    dayList.appendChild(li);
+    container.appendChild(li);
   });
 }
+
+const dayListDaily = document.getElementById('day-list-daily');
+const dayListWeekly = document.getElementById('day-list-weekly');
+
+function renderDayList(){ renderVideoList(dayListDaily, CONFIG.dailySummaries); }
+function renderWeekList(){ renderVideoList(dayListWeekly, CONFIG.weeklySummaries); }
 renderDayList();
+renderWeekList();
+
+// ---- Acordeones de Resúmenes diarios / semanales ----
+document.querySelectorAll('.summary-group-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const body = document.getElementById(header.dataset.target);
+    const isOpen = header.getAttribute('aria-expanded') === 'true';
+    header.setAttribute('aria-expanded', String(!isOpen));
+    body.classList.toggle('collapsed', isOpen);
+  });
+});
 
 // ---- Recaudado ----
 function renderRaised(){
@@ -645,10 +718,11 @@ renderRaised();
 // ---- Conexión con Google Sheet (monto, video principal y resúmenes) ----
 async function loadSheetData(){
   if(!CONFIG.sheetId) return;
+
   try{
     const [datosRes, videosRes] = await Promise.all([
       fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/datos`),
-      fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/videos`)
+      fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/diarios`)
     ]);
     const datos = await datosRes.json();
     const videos = await videosRes.json();
@@ -670,6 +744,20 @@ async function loadSheetData(){
   }catch(e){
     // Si no hay conexión (ej. abriendo el archivo local) se queda con los valores de respaldo del CONFIG.
     console.warn('No se pudo cargar el Google Sheet, usando valores de respaldo.', e);
+  }
+
+  // La pestaña "semanales" se carga aparte: si todavía no existe o falla, no afecta al resto de los datos.
+  try{
+    const semanalesRes = await fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/semanales`);
+    const semanales = await semanalesRes.json();
+    if(Array.isArray(semanales) && semanales.length){
+      CONFIG.weeklySummaries = semanales
+        .filter(v => v.id || v.title)
+        .map(v => ({ id: (v.id || '').trim(), title: v.title || 'Sin título todavía', date: v.date || '' }));
+      renderWeekList();
+    }
+  }catch(e){
+    console.warn('No se pudo cargar la pestaña "semanales" del Sheet.', e);
   }
 }
 loadSheetData();
