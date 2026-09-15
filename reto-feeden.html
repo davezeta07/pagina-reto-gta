@@ -144,35 +144,6 @@
     margin-bottom: 32px;
   }
 
-  .platform-toggle{
-    display:flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .platform-toggle button{
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 9px 18px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--bg-panel);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all .15s ease;
-  }
-
-  .platform-toggle button:hover{ color: var(--text); }
-
-  .platform-toggle button.on{
-    border-color: transparent;
-    color: var(--bg);
-  }
-
-  .platform-toggle button.on.kick{ background: #53FC18; }
-  .platform-toggle button.on.twitch{ background: #A970FF; }
-
   .player{
     position: relative;
     width: 100%;
@@ -488,11 +459,6 @@
       Acá vas a poder seguir el reto en vivo, ver cómo va el recaudo y no perderte ningún resumen.
     </p>
 
-    <div class="platform-toggle" role="group" aria-label="Elegir plataforma de transmisión">
-      <button class="on kick" data-platform="kick">Kick</button>
-      <button class="twitch" data-platform="twitch">Twitch</button>
-    </div>
-
     <div class="player" id="player-container"></div>
   </section>
 
@@ -566,7 +532,6 @@
    (sheetId más abajo). Editá el Sheet para actualizarlos, no este archivo.
    ===================================================================== */
 const CONFIG = {
-  kickChannel: "feeden",
   twitchChannel: "feeden_",
 
   // Valores de respaldo por si el Google Sheet no llega a cargar (ej. sin conexión).
@@ -590,7 +555,6 @@ const CONFIG = {
   socialLinks: [
     { platform: "YouTube",  handle: "@Feeden_",  url: "https://www.youtube.com/@Feeden_",     image: "images/feeden-youtube.jpg" },
     { platform: "Twitch",   handle: "feeden_",    url: "https://www.twitch.tv/feeden_",         image: "images/feeden-twitch-kick.png" },
-    { platform: "Kick",     handle: "feeden",     url: "https://kick.com/feeden",               image: "images/feeden-twitch-kick.png" },
     { platform: "Instagram",handle: "@fedenrios", url: "https://www.instagram.com/fedenrios/",  image: "images/feeden-ig-tiktok.jpg" },
     { platform: "TikTok",   handle: "@feeden_",   url: "https://www.tiktok.com/@feeden_",       image: "images/feeden-ig-tiktok.jpg" }
   ]
@@ -615,25 +579,11 @@ tabs.forEach(tab => {
   });
 });
 
-// ---- Reproductor multiplataforma ----
+// ---- Reproductor de Twitch ----
 const playerContainer = document.getElementById('player-container');
-const platformButtons = document.querySelectorAll('.platform-toggle button');
 const parentDomain = location.hostname || 'localhost';
 
-function renderPlayer(platform){
-  platformButtons.forEach(b => b.classList.toggle('on', b.dataset.platform === platform));
-  if(platform === 'kick'){
-    playerContainer.innerHTML = `<iframe src="https://player.kick.com/${CONFIG.kickChannel}" allowfullscreen></iframe>`;
-  } else {
-    playerContainer.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${CONFIG.twitchChannel}&parent=${parentDomain}" allowfullscreen></iframe>`;
-  }
-}
-
-platformButtons.forEach(btn => {
-  btn.addEventListener('click', () => renderPlayer(btn.dataset.platform));
-});
-
-renderPlayer('kick');
+playerContainer.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${CONFIG.twitchChannel}&parent=${parentDomain}" allowfullscreen></iframe>`;
 
 // ---- Video principal ----
 const mainEmbed = document.getElementById('main-video-embed');
